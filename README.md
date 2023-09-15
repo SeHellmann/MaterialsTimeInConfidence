@@ -18,6 +18,7 @@ The most recent author manuscript of the article is available here: .....
   - several .RData files with saved results, which are loaded in Main_Script.R to avoid time-consuming computations (like model fitting), when check reproducibility
 - sessionInfo.txt with the text-output of the sessionInfo() function
 - SessionInfo.RData including the output of sessionInfo() as R object SessionInfo (this can be used to install the exact package versions more easily)
+- LICENCE a licence file for this material, which is published under the GNU GPL 
 
 ## Usage:
 
