@@ -1,0 +1,33 @@
+R Under development (unstable) (2023-06-23 r84599)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.3 LTS
+
+Matrix products: default
+BLAS:   /home/user/R/lib/R/lib/libRblas.so 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8   
+ [6] LC_MESSAGES=en_US.UTF-8    LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Europe/Berlin
+tzcode source: system (glibc)
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] logger_0.2.2           ggh4x_0.2.6            BayesFactor_0.9.12-4.4 Matrix_1.6-1           coda_0.19-4            lubridate_1.9.2       
+ [7] forcats_1.0.0          stringr_1.5.0          dplyr_1.1.2            purrr_1.0.1            readr_2.1.4            tidyr_1.3.0           
+[13] tibble_3.2.1           ggplot2_3.4.2          tidyverse_2.0.0        dynConfiR_0.0.3        Rmisc_1.5.1            plyr_1.8.8            
+[19] lattice_0.21-8        
+
+loaded via a namespace (and not attached):
+ [1] utf8_1.2.3         generics_0.1.3     stringi_1.7.12     hms_1.1.3          magrittr_2.0.3     grid_4.4.0         timechange_0.2.0  
+ [8] mvtnorm_1.2-3      progress_1.2.2     mgcv_1.8-42        fansi_1.0.4        scales_1.2.1       pbapply_1.7-2      textshaping_0.3.6 
+[15] cli_3.6.1          rlang_1.1.1        crayon_1.5.2       splines_4.4.0      munsell_0.5.0      withr_2.5.0        tools_4.4.0       
+[22] tzdb_0.4.0         MatrixModels_0.5-2 minqa_1.2.5        colorspace_2.1-0   vctrs_0.6.3        R6_2.5.1           lifecycle_1.0.3   
+[29] ragg_1.2.5         pkgconfig_2.0.3    pillar_1.9.0       gtable_0.3.3       glue_1.6.2         Rcpp_1.0.10        systemfonts_1.0.4 
+[36] tidyselect_1.2.0   rstudioapi_0.14    farver_2.1.1       snow_0.4-4         nlme_3.1-162       labeling_0.4.2     compiler_4.4.0    
+[43] prettyunits_1.1.1 

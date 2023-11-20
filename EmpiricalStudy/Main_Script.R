@@ -38,7 +38,10 @@ print(getwd())
   library(BayesFactor) 
   #library(xtable)   # for latex tables
   library(ggh4x)  # for facet_nested
+  library(parallel)
 }
+
+
 
 #__________________________________________________________----
 # A  Model fitting and Data Preparation                    ----
@@ -238,7 +241,7 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
   #             by = c("model", "experiment", "correct", "condition"))
   ### h) Remove raw prediction df's from environment       ----
   rm(list=c("preds_RT", "RT_dist", "preds_confidence"))
-  ### g) Save aggregated data and predictions              ----
+  ### i) Save aggregated data and predictions              ----
   save(Data,
        Data_RatingDist_part, Data_RatingDist_corr_cond,
        Data_MRating_corr_cond, Data_RTQuants_corr_rating, 
@@ -254,7 +257,7 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
 #__________________________________________________________----
 # B  Generate visualizations                               ----
 ## Include font style and define colors for plots          ----
-windowsFonts(Times=windowsFont("Times New Roman"))
+#windowsFonts(Times=windowsFont("Times New Roman"))
 two_colors_correct <- c("#1b9e77", "#fc8d62")
 model_colors = c("#D81B60", "#1E88E5", "#FFC107","#004D40")
 
@@ -305,18 +308,8 @@ p_MRating
 dir.create("figures", showWarnings = FALSE)
 ggsave("figures/meanRating1.tiff",
        width = 17.62, height=9/0.7, units="cm",dpi=600)
-p_MRating + scale_x_discrete(name="Stimulus-onset-asynchrony [ms]                                                                                       Motion coherence [%]                                                                                         Contrast [%]             ")
 ggsave("figures/meanRating1.eps",
        width = 17.62, height=14, units="cm",dpi=1200, device = cairo_ps)
-# p_MRating <- p_MRating + scale_x_discrete(
-#   name= "Stimulus-onset-asynchrony [ms]            Motion coherence [%]                   Contrast [%]                 ")+
-#   theme(legend.box="horizontal")
-# p_MRating
-# ggsave("figures/meanRating2.tiff",
-#        width = 17.62/1.2, height=9/1.2, units="cm",dpi=600)
-
-
-
 
 ## Figure 7: RTQuantiles accross correct X rating          ----
 Data_RTQuants_corr_rating_plot <- Data_RTQuants_corr_rating %>%
@@ -381,13 +374,6 @@ ggsave("figures/RTQuantsConf.tiff",
 #        width=18.288, height=15.24, dpi=1200, units="cm", device=cairo_ps)
 
 
-
-
-
-
-
-
-
 #__________________________________________________________----
 # C  Quantitative comparison                               ----
 compute_bf <- function(x,y) {
@@ -422,7 +408,7 @@ BIC_BF_time_dep <-  fits %>%
 BIC_BF_time_dep
 
 ## Figure 8: Comparison dynaViTE vs. all other models      ----
-descr_BIC <- fits[,c("participant", "model","time_dep", "BIC", "experiment")] %>% 
+descr_BIC <- fits[,c("participant", "model", "BIC", "experiment")] %>% 
   group_by(experiment) %>%
   reframe(Rmisc::summarySEwithin(pick(everything()), measurevar="BIC", withinvars = "model", idvar="participant")) %>%
   mutate(model = factor(model, levels=rev(c("dynaViTE", "dynWEV", "2DSDT", "2DSD"))))
@@ -454,7 +440,7 @@ my_breaks <- function(x) {
   }
 }
 
-ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
+p_BIC <- ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
   geom_line()+ #stat="identity", 
   geom_errorbar(aes(ymin=-BIC-se, ymax=-BIC+se), width=0.2)+
   facet_nested(.~experiment, scales="free_x", axes="x", independent = "x")+
@@ -475,9 +461,9 @@ ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
         strip.text = element_text(size=14),
         legend.text = element_text(
           margin = margin(l = 4, r=4, t=2, b=2,unit = "pt")))
-ggsave("figures/BIClines_againstdynavite.eps",
+ggsave("figures/BIClines_againstdynavite.eps", plot=p_BIC,
        width=17.62, height=7, dpi=1200, units="cm", device=cairo_ps)
-ggsave("figures/BIClines_againstdynavite.jpg",
+ggsave("figures/BIClines_againstdynavite.jpg", plot=p_BIC,
        width = 22, height=7, units="cm",dpi=1200)
 
 #__________________________________________________________----
@@ -497,17 +483,6 @@ parfits_long_dynaViTEdynWEV <- fits %>% filter(model %in% c("dynaViTE", "dynWEV"
   pivot_wider(names_from = model, values_from=fit) %>%
   mutate(parameter = factor(parameter, levels = par_levels,labels = par_labels))
 ## Table 3: Mean proportion of tau, t0, and decision time  ----
-# Data %>% group_by(participant, experiment) %>% 
-#   select(participant, experiment, rt) %>%
-#   full_join(select(subset(fits, model%in% c("dynWEV", "dynaViTE")), 
-#                    experiment, participant, model, tau, t0), 
-#             by=c("experiment", "participant"),
-#             relationship="many-to-many") %>%
-#   mutate(proptau=tau/(rt), propt0=t0/(rt), propTdec=(rt-t0-tau)/(rt)) %>%
-#   group_by(experiment, model) %>%
-#   summarise(meanptau= mean(proptau), 
-#             meanpt0=mean(propt0), meanpTdec = mean(propTdec)) %>%
-#   arrange(experiment, desc(model))
 mean_posttime <- data.frame()
 for (i in 1:4 ) {
   curmodel <- unique(fits$model)[i]
@@ -536,7 +511,7 @@ diff_dynaViTE_vs_dynWEV_in_tau_and_t0 <- parfits_long_dynaViTEdynWEV %>%
   pivot_wider(names_from = "parameter", values_from = "diff", 
               id_cols = c("participant", "experiment"))%>%
   mutate(experiment = str_replace(experiment, "\n", " "))
-ggplot(diff_dynaViTE_vs_dynWEV_in_tau_and_t0, 
+p_taut0 <- ggplot(diff_dynaViTE_vs_dynWEV_in_tau_and_t0, 
        aes(x=tau, y=`t[0]`, color=experiment))+
   geom_abline(slope= -1, col="black", alpha=0.7)+
   geom_point()+ 
@@ -553,10 +528,12 @@ ggplot(diff_dynaViTE_vs_dynWEV_in_tau_and_t0,
         axis.text = element_text(size=9, family="Times", color="black"),
         axis.title.y = element_text( angle=90),
         strip.text = element_text(size=9))
-ggsave("figures/differencetaut0.tiff",
+p_taut0
+ggsave("figures/differencetaut0.tiff", plot=p_taut0,
        width = 6.49, height=6.5, units="cm",dpi=600)
-ggsave("figures/differencetaut0.eps",
+ggsave("figures/differencetaut0.eps", plot=p_taut0,
        width = 6.49, height=6.5, units="cm",dpi=600, device = cairo_ps)
+
 
 ## Figure 10: Cor DDM parameters btw dynaViTE and dynWEV   ----
 DDMparfits_long_dynaViTEdynWEV <- parfits_long_dynaViTEdynWEV  %>%
@@ -701,7 +678,8 @@ if (!file.exists("results_mimikry_analysis.RData")) {
   load("results_mimikry_analysis.RData")
 }
 ## Analyse recovery results                                ----
-# Identification accuracy 
+# Identification accuracy for all simulations 
+# (also thos with lambda=0)
 mimikry_collected_results %>%
   group_by(simu, gen_model) %>%
   summarise(BIC = model[which(BIC==min(BIC))],
@@ -711,6 +689,7 @@ mimikry_collected_results %>%
   reframe(accBIC = mean(BIC==gen_model),
           accAIC = mean(AIC==gen_model),
           accAICc = mean(AICc==gen_model))
+
 # Fitted lambda for dynWEV-generated data
 mimikry_collected_results %>%
   filter(gen_model=="dynWEV" & model=="dynaViTE") %>%
@@ -723,17 +702,80 @@ true_pars <- mimikry_collected_results %>%
   distinct() %>%
   filter(model=="dynaViTE") %>%
   left_join(fits) 
-
-mimikry_diffcriteria <- mimikry_collected_results %>% 
-  filter(gen_model =="dynaViTE") %>%
-  arrange(desc(model), participant,  simu) %>%
+# Number of correctly or incorrectly identified simulations
+# generated by dynaViTE depending on the true generating lambda
+mimikry_collected_results %>% filter(gen_model =="dynaViTE") %>%
   group_by(simu,  participant, experiment,N) %>%
-  summarise(diff =BIC[model=="dynWEV"]-BIC[model=="dynaViTE"],.groups = "drop") %>%
-  left_join(select(true_pars, true_lambda=lambda,simu, participant, experiment))
-mimikry_diffcriteria %>% group_by(true_lambda==0) %>%
-  summarise(acc=mean(diff>0),
-            Ncorr = sum(diff>0))
-## Figure 11: True and recovered dynaViTE parameters       ----
+  summarise(identified =model[which(BIC==min(BIC))], .groups = "drop") %>%
+  left_join(select(true_pars, true_lambda=lambda,simu, participant, experiment)) %>% 
+  group_by(true_lambda==0, identified) %>%
+  summarise(N = n())
+
+## Figure 12: Proportions of correctly identified models  ----
+props_identified <- mimikry_collected_results %>%
+  left_join(select(true_pars, true_lambda=lambda,simu, participant, experiment)) %>%
+  filter(gen_model=="dynWEV" | true_lambda!=0) %>%
+  pivot_longer(cols=c("BIC", "AIC", "AICc"), values_to = "IC", names_to = "criterion") %>%
+  group_by(simu, gen_model, criterion) %>%
+  summarise(best_model = model[which(IC==min(IC))]) %>%
+  group_by(gen_model, criterion, best_model) %>%
+  reframe(N=n()) %>% arrange(gen_model, criterion)%>% 
+  group_by(gen_model, criterion) %>%
+  mutate(prop = N/sum(N)) %>% ungroup() 
+props_correct_id <-   
+  props_identified %>% mutate(correct = gen_model==best_model) %>%
+  group_by(criterion) %>% mutate(Ntot=sum(N)) %>%
+  group_by(criterion, correct) %>%
+  reframe(prop=sum(N)/Ntot[1])
+pie_theme <-    theme_void()+  
+  theme(
+    #plot.background =  element_rect(fill="white", color = "white"),
+    plot.margin = margin(0, 0, 0, 0, "cm"),
+    text = element_text(size=9, family="Times"),
+    legend.text = element_text(size=9),
+    strip.text = element_text(size=9, family = "Times", angle=0),
+    strip.text.y.right = element_text(angle = -90),
+    legend.direction = "vertical", legend.position = "bottom", 
+    legend.box = "horizontal", legend.spacing.y = unit(0.5, "lines"),
+    legend.margin =margin(0,0,0,0, "cm"), legend.box.spacing = unit(0.2,"lines"),
+    #legend.title = element_blank(),
+    legend.key = element_blank(),
+    legend.key.width=unit(1.5,"line"),
+    panel.spacing=unit(0, "lines"))
+
+strips <- strip_nested(text_y = list(element_blank()),
+                       background_y = list(element_blank()), by_layer_y = TRUE)
+gen_model_identification <- ggplot(props_identified , aes(x="", y=prop, fill=best_model))+
+  geom_bar(stat="identity", width=1, color="white")+
+  coord_polar("y", start=0)+
+  facet_nested(rows=vars(criterion), 
+               cols=c(vars("Generative model"),vars(gen_model)),
+               strip = strips)+
+  geom_text(data=subset(props_identified , gen_model==best_model),
+            aes(y = 0.5*prop, label = format(round(prop, 2), nsmall=2)), 
+            color = "black", size=9/.pt) +
+  scale_fill_brewer(palette="Set2", name="Model favored by IC")+
+  pie_theme
+total_identification <- ggplot(props_correct_id , aes(x="", y=prop, fill=as.factor(correct)))+
+  geom_bar(stat="identity", width=1, color="white")+
+  coord_polar("y", start=0)+
+  facet_nested(rows=c(vars(criterion)), 
+               cols=c(vars("Total"), vars("")))+
+  geom_text(data=subset(props_correct_id, correct),
+            aes(y = 0.5*prop, label = format(round(prop, 2), nsmall=2)), 
+            color = "black", size=9/.pt) +
+  scale_fill_brewer(palette="Set1", name="Identified",
+                    labels=c("Incorrect", "Correct"))+
+  pie_theme
+ggpubr::ggarrange(gen_model_identification, total_identification, 
+                  nrow=1, widths = c(.64, .36)) + 
+  ggpubr::bgcolor("white")+
+  ggpubr::border("white")
+ggsave("figures/Identification_Accuracy.tiff",
+       width = 8, height=9, units="cm",dpi=600)   # Filling a whole power point slide
+
+
+## Figure 12: True and recovered dynaViTE parameters       ----
 experiment_colors = c("#AA4499","#117733", "#DDCC77")
 par_labels <- c('nu[1]', 'nu[2]', 'nu[3]', 'nu[4]', 'nu[5]', 's[nu]', 'a', 'z', 's[z]', 
                 't[0]', 's[t0]', 'tau', 'w', 'sigma[V]', 's[V]', 'lambda',
@@ -745,19 +787,29 @@ par_levels <- c('v1', 'v2', 'v3', 'v4', 'v5', 'sv', 'a', 'z', 'sz',
                 paste0('thetaUpper',1:4))
 comp_true_rec_dynaViTE <- mimikry_collected_results %>% 
   filter(gen_model =="dynaViTE" & model=="dynaViTE") %>%
-  select(v1:lambda, participant, simu, experiment) %>%
+  select(par_levels, participant, simu, experiment) %>%
   mutate(true_rec="recovered") %>%
   rbind(mutate(select(true_pars,simu, participant, experiment,
-                      t0:v5), true_rec="true"))
+                      par_levels), true_rec="true"))
 comp_true_rec_dynaViTE <- comp_true_rec_dynaViTE %>% 
-  pivot_longer(cols = v1:lambda, names_to ="parameter") %>%
+  pivot_longer(cols = par_levels, names_to ="parameter") %>%
   pivot_wider(names_from = true_rec, values_from=value) %>%
   mutate(parameter = factor(parameter, levels = par_levels,labels = par_labels))
 
+CCC <- function(x, y) { ## Function to compute the 
+  # concordance correlation coefficient 
+  NAinds <- is.na(x) | is.na(y)
+  x <- x[!NAinds]; y <- y[!NAinds]
+  k <- length(y)
+  sy2 <- var(y) * (k - 1)/k
+  sx2 <- var(x) * (k - 1)/k
+  est <- 2 * cov(x, y) *(k-1)/k /(sx2 + sy2 + (mean(y) - mean(x))^2)
+  return(est)
+}
 est_cors <- subset(comp_true_rec_dynaViTE, 
                    abs(true) < 1e+6 & abs(recovered) < 1e+6) %>%
   group_by(parameter) %>%
-  reframe(cor = cor(true, recovered),
+  reframe(est = CCC(true, recovered),
           x_min=max(true), 
           y_max=min(recovered))
 comp_true_rec_dynaViTE <- comp_true_rec_dynaViTE %>%
@@ -774,7 +826,7 @@ ggplot(filter(comp_true_rec_dynaViTE, abs(true)<1e+6 & abs(recovered) < 1e+6),
   geom_point(alpha=0.5)+ scale_shape_discrete("")+
   geom_text(data = est_cors, #mutate(est_cors, experiment="Experiment 1"),
             aes(x=x_min, y=y_max,
-                label=paste0(format(round(cor, 2), nsmall=2))),#"rho == ",
+                label=paste0(format(round(est, 2), nsmall=2))),#"rho == ",
             color="black",
             parse=TRUE, hjust=1, vjust=0)+
   theme_bw()+ylab("Recovered parameter")+xlab("True generating parameter")+
@@ -790,6 +842,7 @@ ggsave("figures/parameterstruerecovered.tiff",
        width = 17.625, height=21, units="cm",dpi=600)
 ggsave("figures/parameterstruerecovered.eps",
        width = 17.625, height=21, units="cm",dpi=600, device = cairo_ps)
+
 
 #__________________________________________________________----
 # F  Discussion and Supplement                             ----
@@ -863,14 +916,10 @@ p_Acc <- ggplot(Data_Acc,
 p_Acc
 
 dir.create("figures", showWarnings = FALSE)
+ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/modelAccuracy1.eps",
+       width = 17.62, height=17, units="cm",dpi=600, device = cairo_ps)
 ggsave("figures/modelAccuracy1.tiff",
        width = 17.62, height=9/0.75, units="cm",dpi=600)
-p_Acc + scale_x_discrete(
-  name="Stimulus-onset-asynchrony [ms]            Motion coherence [%]                   Contrast [%]                 ")
-ggsave("figures/modelAccuracy2.tiff",
-       width = 17.62/1.2, height=9/1, units="cm",dpi=600)
-ggsave("figures/modelAccuracy1.eps",
-       width = 17.62, height=17, units="cm",dpi=600, device = cairo_ps)
 
 ## Suppl Table 1: Descriptive parameter fits dynaViTE      ----
 meanFits <- fits %>% 
@@ -903,10 +952,11 @@ meanFits[meanFits$model %in% c("dynWEV", "2DSD"), "$\\lambda$"] <- "--"
 # print(xtable(meanFits, align = c("l", "l", rep("c", ncol(meanFits)-1))), type="latex", file="tablepars1.tex",sanitize.text.function=function(x){x}, include.rownames=FALSE)
 # print(xtable(meanFits, align = c("l", "l", rep("c", ncol(meanFits)-1))), type="latex", file="../Supplement/figures/tablepars1.tex",sanitize.text.function=function(x){x}, include.rownames=FALSE)
 
-# Report only dynaViTE model  
-meanFits <- meanFits %>% subset(model=="dynaViTE")
-# Use this to produce a long table
-meanFits_long <- meanFits %>% select(-model) %>%
+# Use this to produce a long table with only fits for dynaViTE
+meanFits_long <- meanFits %>% 
+  # Report only dynaViTE model  
+  subset(model=="dynaViTE") %>% 
+  select(-model) %>%
   pivot_longer(cols = 2:(ncol(meanFits)-1), names_to = "Parameter") %>%
   pivot_wider(id_cols = "Parameter", names_from = c("experiment"), values_from = value) 
 meanFits_long
@@ -929,13 +979,34 @@ if (!"xtable" %in% installed.packages()[,"Package"]) {
   install.packages("xtable")
 }
 library(xtable)
+# Use this to produce a long table with all model fits
+meanFits_long <- meanFits %>% 
+  # Report only dynaViTE model  
+  pivot_longer(cols = 3:(ncol(meanFits)-1), names_to = "Parameter") %>%
+  pivot_wider(id_cols = "Parameter", names_from = c("experiment", "model"), values_from = value) 
+meanFits_long
 Fits_textable <- xtable(meanFits_long, align = c("l", "l", rep("c", ncol(meanFits_long)-1)),
                         caption="\\raggedright Mean and standard deviation of parameter fits")
-
+names(Fits_textable) <- 
+  c("Model", str_split_i(names(Fits_textable)[2:ncol(Fits_textable)], "_", 2))
+experimentlabels <- str_replace(str_replace(unique(meanFits$experiment),"\n", " "), "&", "\\\\&")
 addtorow <- list()
-addtorow$pos <- list(-1, c(0:(nrow(Fits_textable)-1)))
-addtorow$command <- c('\\toprule  & \\multicolumn{3}{c}{Experiment}\\\\ \\cmidrule{2-4} ','[1mm]')
-print(Fits_textable, type="latex", file="figures/tablepars2.tex",sanitize.text.function=function(x){x}, 
+addtorow$pos <- list(-1, -1, c(0:(nrow(Fits_textable)-1)))
+addtorow$command <- c('\\toprule  & \\multicolumn{12}{c}{Experiment}\\\\ \\cmidrule{2-13} ',
+                      paste0(" & ", 
+                             paste0("\\multicolumn{4}{c}{",experimentlabels , "}", collapse = " & "),
+                             " \\\\ \\cmidrule{2-5} \\cmidrule{6-9} \\cmidrule{10-13}"),
+                      '[1mm]')
+print(Fits_textable, type="latex", 
+      sanitize.text.function=function(x){x}, 
+      include.rownames=FALSE, 
+      add.to.row=addtorow, 
+      hline.after = c(0, nrow(Fits_textable)), booktabs = TRUE,
+      caption.placement="top",
+      table.placement="hp")
+print(Fits_textable, type="latex", 
+      file="C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/tablepars2.tex",
+      sanitize.text.function=function(x){x}, 
       include.rownames=FALSE, 
       add.to.row=addtorow, 
       hline.after = c(0, nrow(Fits_textable)), booktabs = TRUE,
@@ -985,6 +1056,11 @@ for (i in 1:3) {
                 str_replace_all(cur_experiment, c("\n"="", " "="", "\\("="", "\\)"="", "\\."="")),
                 ".tiff"),
          width=17.3, height=18, units="cm",dpi=1200)
+  ggsave(paste0("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/RespDist", 
+                str_replace_all(cur_experiment, c("\n"="", " "="", "\\("="", "\\)"="", "\\."="")),
+                ".eps"),
+         width=17.3, height=18, units="cm",dpi=1200, device = cairo_ps)
+  
 }
 
 # The end                                                  ####

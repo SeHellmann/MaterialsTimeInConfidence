@@ -1,7 +1,7 @@
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
-load("EmpiricalStudy/modelfits_threeexps.RData")
+load("../EmpiricalStudy/modelfits_threeexps.RData")
 paramDf <- subset(fits, participant==215&model=="dynaViTE") %>%
   select(t0:lambda, v4, v5)
 paramDf <- round(paramDf, 1)
@@ -144,8 +144,6 @@ gDec <- ggplot(data = predsDec, aes(x = vis, y = rt, z = fill))  +
 ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom")
 ggsave("figures/posterior_prob_corrects.tiff",
        width = 13.62, height=6, units="cm",dpi=900)
-# ggsave("figures/modelAccuracy1.eps",
-#        width = 17.62, height=14, units="cm",dpi=600, device = cairo_ps)
 
 
 #########################################################################
@@ -292,8 +290,8 @@ ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom",
                   widths=c(0.32, 0.32, 0.36))
 ggsave("figures/posterior_prob_corrects_unifdist.tiff",
       width = 17.62, height=16, units="cm",dpi=900, bg="white")
-ggsave("figures/posterior_prob_corrects_unifdist.eps",
-       width = 17.62, height=16, units="cm",dpi=1200, device = cairo_ps)
+ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/posterior_prob_corrects_unifdist.eps",
+       width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
 
 
 #########################################################################
@@ -435,6 +433,7 @@ ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom",
                   widths=c(0.32, 0.32, 0.36))
 ggsave("figures/posterior_prob_corrects_absnorm.tiff",
        width = 17.62, height=16, units="cm",dpi=900, bg="white")
-ggsave("figures/posterior_prob_corrects_absnorm.eps",
-       width = 17.62, height=16, units="cm",dpi=1200, device = cairo_ps)
+# Only for manuscript generation
+ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/posterior_prob_corrects_absnorm.eps",
+       width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
 

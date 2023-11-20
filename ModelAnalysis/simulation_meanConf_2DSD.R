@@ -16,6 +16,7 @@ print(getwd())
 
 library(dynConfiR)
 library(tidyverse)
+library(ggh4x)
 windowsFonts(Times=windowsFont("Times New Roman"))
 two_colors_correct <- c("#1b9e77", "#fc8d62")
 dir.create("figures",showWarnings = FALSE)
@@ -77,17 +78,16 @@ p_MRating_tau <- ggplot(meanConf_tau,
         legend.box.margin = margin(-0.3, 0, 0, 0, "cm"),
         legend.key.width=unit(1.5,"line"),
         panel.spacing.y=unit(0, "lines"))
-p_MRating_tau
-ggsave("figures/simul_2DSD_taulambda.eps",
-       width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
-ggsave("figures/simul_2DSD_taulambda.tiff",
+# # Only for manuscript generation
+# ggsave("figures/simul_2DSD_taulambda.eps",
+#        width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
+ggsave("figures/simul_2DSD_taulambda.tiff", plot=p_MRating_tau,
        width = 17.62, height=15, units="cm",dpi=600)
 
 
 
 
 # Supplementary Figure 1                                  ----
-
 set.seed(2201)
 drift_levels <- seq(0, 3.2, length.out=5)
 paramDf_a <- expand.grid(sv=c(0.1, 0.5, 1, 1.5), 
@@ -139,8 +139,8 @@ p_MRating_a <- ggplot(meanConf_a,
         legend.box.margin = margin(-0.3, 0, 0, 0, "cm"),
         legend.key.width=unit(1.5,"line"),
         panel.spacing.y=unit(0, "lines"))
-p_MRating_a
-ggsave("figures/simul_2DSD_asv.eps",
-       width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
-ggsave("figures/simul_2DSD_ssv.tiff",
+# Only for manuscript generation
+ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/simul_2DSD_asv.eps",
+       width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
+ggsave("figures/simul_2DSD_ssv.tiff", plot = p_MRating_a,
        width = 17.62, height=15, units="cm",dpi=600)
