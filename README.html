@@ -356,11 +356,11 @@ display: none;
 <div id="decision-time-in-dynamical-confidence-models" class="section level1">
 <h1>Decision time in dynamical confidence models</h1>
 <p>This repository contains code and data used in the paper
-<strong>Confidence is influenced by decision time in dynamical decision
-models</strong> (Hellmann, S., Zehetleitner, M., &amp; Rausch, M.
-(preprint). Data was previously published in Hellmann, et al. (2023) and
-Shekhar &amp; Rahnev (2021). The most recent author manuscript of the
-article is available here: …..</p>
+<strong>Confidence is influenced by evidence accumulation time in
+dynamical decision models</strong> (Hellmann, S., Zehetleitner, M.,
+&amp; Rausch, M. (preprint: <a href="https://osf.io/preprints/psyarxiv/5ze8t/" class="uri">https://osf.io/preprints/psyarxiv/5ze8t/</a>). Data was
+previously published in Hellmann, et al. (2023) and Shekhar &amp; Rahnev
+(2021).</p>
 <div id="structure" class="section level2">
 <h2>Structure:</h2>
 <ul>
@@ -370,7 +370,8 @@ dynConfiR package used for analyses)</li>
 model analysis section including simulation of KL distances and mean
 confidence in the dynaViTE model and a shiny application to play with
 parameters in figure X.</li>
-<li>“EmpiricalStudy”: folder with</li>
+<li>“EmpiricalStudy”: folder with
+<ul>
 <li>“data” folder containing .RData files with the raw data (.csv’s are
 available at the confidence database (<a href="https://osf.io/s46pr/" class="uri">https://osf.io/s46pr/</a>))</li>
 <li>Main_Script.R file which includes all analysis, from model fitting
@@ -380,11 +381,17 @@ unfolded in RStudio</li>
 <li>several .RData files with saved results, which are loaded in
 Main_Script.R to avoid time-consuming computations (like model fitting),
 when check reproducibility</li>
+</ul></li>
 <li>sessionInfo.txt with the text-output of the sessionInfo()
 function</li>
 <li>SessionInfo.RData including the output of sessionInfo() as R object
 SessionInfo (this can be used to install the exact package versions more
 easily)</li>
+<li>InstallRequirements.R providing code to easily install the same
+package versions used for the analyses as stated in the SessionInfo
+files.</li>
+<li>LICENCE a licence file for this material, which is published under
+the GNU GPL</li>
 </ul>
 </div>
 <div id="usage" class="section level2">
@@ -413,6 +420,9 @@ some time</li>
 modeling of choice, confidence and response time in visual perception.
 Psychological Review. 2023 Mar 13. <a href="https://doi.org/10.1037/rev0000411" class="uri">https://doi.org/10.1037/rev0000411</a>. Epub ahead of print.
 PMID: 36913292.</p>
+<p>Shekhar, M., &amp; Rahnev, D. (2021). The nature of metacognitive
+inefficiency in perceptual decision making. Psychological Review,
+128(1), 45–70. <a href="https://doi.org/10.1037/rev0000249" class="uri">https://doi.org/10.1037/rev0000249</a></p>
 </div>
 </div>
 <div id="contact" class="section level2">
