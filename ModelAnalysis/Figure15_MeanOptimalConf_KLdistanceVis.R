@@ -1,9 +1,9 @@
-### Computation of optimal confidence 
-# Visualization of the posterior probability of being correct 
+## Visualization of the mean posterior probability of being correct 
 # given decision evidence, decision time, and visibility state
+# Computation of the KL distance of visibility btw correct and incorrect decisions
 
-# This code produces Figure 5 and
-# Supplementary Figures 4 and 5 in the paper. 
+# This code produces Figure 15 and
+# Supplementary Figures 12 and 13 in the paper. 
 
 # Preamble and imports                                     ----
 rm(list = ls())
@@ -56,8 +56,9 @@ custom_theme <- function() {
 dir.create("figures", showWarnings = FALSE)
 
 ##############################################################################
-###### Figures 3 & 4: Simulated KL distance for visibility and      ##########
-######      mean confidence for different Vrange and sigvis(&svis)  ##########
+###### Figures 15: Simulated mean confidence and                    ##########
+###### Suppl. Fig. 13: KL distance for visibility                   ##########
+######       for different Vrange and sigvis(&svis)                 ##########
 ##############################################################################
 paramDf <- as.data.frame(list(a=2, z=0.5, sz=0, sv=0,
                               tau=1.5, svis=1, sigvis=0.2,
@@ -133,6 +134,7 @@ p_MeanOptConf <- ggplot(subset(meanconf,Vrange>0.4), aes(x=d, y=Mconf, color=as.
                strip=strip_nested(by_layer_y = TRUE,
                             text_y = elem_list_text(angle=c(-90,0))))+
   custom_theme()+theme(legend.position = "bottom")
+p_MeanOptConf
 # # Only for manuscript generation
 # ggsave("figures/MeanOptimalConf.eps",
 #        width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
@@ -148,71 +150,18 @@ p_KLvisibility <- ggplot(res, aes(x=Vrange, y=KL_vis,
   scale_color_viridis_d(name="Variation in\nvisibility\naccumulation")+
   custom_theme()+theme(legend.position = "right",
                        legend.direction = "vertical")
-# # Only for manuscript generation
-# ggsave("figures/KLvisibility.eps",
-#        width = 17.62/2, height=6, units="cm",dpi=1200, device = cairo_ps)
+p_KLvisibility
+# ## Only for manuscript generation
+# ggsave("C:/Users/go73jec/Documents/Forschung/Manuskripte/TimeInDynWEV/Supplement/figures/KLvisibility.eps",
+#        width = 12, height=5, units="cm",dpi=1200, device = cairo_ps)
 ggsave("figures/KLvisibility.tiff", plot=p_KLvisibility,
-       width = 17.62/2, height=6, units="cm",dpi=600)
+       width = 12, height=5, units="cm",dpi=600)
 
 
 
-##############################################################################
-###### SupplFig 2:KL distance visibility Vrange and sv   #####################
-##############################################################################
-mu_Var <- c(0.4, 0.8, 1.2)
-VRange <- matrix(data = c(0.65, 0.65,
-                          0.5, 0.8,
-                          0.4, 0.9,
-                          0.3, 1.1, 
-                          0.1, 1.4, 
-                          0, 2), ncol = 2, byrow = TRUE)
-if (!file.exists("info_KLdistance_meanConf_simus_rangemuvar.RData")) {
-  set.seed(2201)
-  res <- data.frame()
-  for (l in 1:length(mu_Var)) {
-    for (i in 1:nrow(VRange)) {
-      vrange <- c(0.2, 1.7)
-      vsteps <- 4
-      vis_var <- 0.05
-      vrange <- VRange[i,]
-      tau <- 0.2
-      mu_var <- mu_Var[l]
-      Ds <- seq(vrange[1],vrange[2], length.out=vsteps)
-      paramDf <- as.data.frame(list(a=2, z=0.5, sz=0, sv=mu_var,
-                                    tau=tau, svis=vis_var, sigvis=vis_var,
-                                    theta1=0.5, lambda=0, t0=0, st0=0, w=0.5))
-      paramDf[,paste("v", 1:vsteps, sep="")] <- Ds
-      data <- simulateWEV(paramDf, 1e+6/(2*vsteps), model = "dynWEV", simult_conf = TRUE, process_results = TRUE)
-      KL_vis <- FNN::KL.divergence(data[data$correct==1, "vis"], data[data$correct==0, "vis"], k=15)[15]
-      res <- rbind(res, c(diff(vrange), mu_var, KL_vis, mean(data$correct)))#, KL_dec, res_KL
-    }
-  }
-  names(res) <- c("vrange", "mu_var", "KL_vis", "Accuracy")#, "KL_dec", "KL_vis_cond_dec"
-  save(res, file="info_KLdistance_meanConf_simus_rangemuvar.RData")
-} else {
-  load("info_KLdistance_meanConf_simus_rangemuvar.RData")
-}
-p_KL_rangemuvar <- ggplot(res, 
-                        aes(x=vrange, y=KL_vis, linetype=as.factor(mu_var),
-                            color=as.factor(mu_var)))+
-  geom_line(linewidth=1.2)+
-  ylab("KL divergence")+ xlab("Discriminability range")+
-  scale_linetype_discrete(name="Between-trial variability\nin decision drift")+
-  scale_color_viridis_d(name="Between-trial variability\nin decision drift")+
-  custom_theme()+
-  theme(legend.position = "bottom", legend.direction = "horizontal", 
-        legend.box = "horizontal")
-p_KL_rangemuvar
-# Only for manuscript generation
-ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/KLvisibility_rangemuvar.eps",
-       width = 12, height=6, units="cm",dpi=1200, device = cairo_ps)
-ggsave("figures/KLvisibility_rangemuvar.tiff", plot=p_KL_rangemuvar,
-       width = 17.62/1.5, height=9, units="cm",dpi=600)
-
-  
 
 ##########################################################################
-###### SupplFig 3: Mean Conf Simulation tau and sv   #####################
+###### SupplFig 12: Mean Opt Conf Simulation tau and sv   ################
 ##########################################################################
 Tau <- c(0.1, 0.5, 1)
 mu_Var <- c(0.4, 0.8, 1.2)
@@ -256,8 +205,8 @@ p_meanconf_tausv <- ggplot(meanconf, aes(x=d, y=Mconf, color=as.factor(correct))
   facet_nested(rows=c(vars("Between-trial variability in drift rate"),vars(mu_var)),
                cols=c(vars("Postdecisional accumulation time"), vars(tau)))+
   custom_theme()+theme(legend.position = "bottom")
-# Only for manuscript generation
-ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/MeanOptimalConftausv.eps",
-      width = 15, height=8, units="cm",dpi=1200, device = cairo_ps)
+# # Only for manuscript generation
+# ggsave("C:/Users/go73jec/Documents/Forschung/Manuskripte/TimeInDynWEV/Supplement/figures/MeanOptimalConftausv.eps",
+#       width = 15, height=15, units="cm",dpi=1200, device = cairo_ps)
 ggsave("figures/MeanOptimalConftausv.tiff", plot=p_meanconf_tausv,
        width = 17.62, height=15, units="cm",dpi=600)

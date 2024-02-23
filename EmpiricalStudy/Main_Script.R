@@ -3,7 +3,7 @@
 #####       Time in dynamical confidence models             -
 #__________________________________________________________----
 
-# Sebastian Hellmann, 21.9.2023
+# Sebastian Hellmann, 23.02.2024
 
 ## Structure:
 # Preamble and imports                                   
@@ -184,8 +184,8 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
   Preds_RatingDist_corr_cond <- preds_confidence %>%
     group_by(model, experiment, rating, correct, condition) %>%
     summarise(p = mean(p), .groups="drop") %>%
-    mutate(model = factor(model, levels = c("dynaViTE", "2DSDT", "dynWEV", "2DSD"),
-                          labels = c("dynaViTE", "2DSDT", "dynWEV", "2DSD")), 
+    mutate(model = factor(model, levels = c("dynaViTE",  "dynWEV", "2DSDT", "2DSD"),
+                          labels = c("dynaViTE", "dynWEV", "2DSD+",  "2DSD")), 
            condition = factor(condition+ifelse(experiment=="Hellmann et al. (2023)\nExperiment 2", 5, 0)+
                                 ifelse(experiment=="Shekhar & Rahnev (2021)\nExperiment 4", 10, 0),
                               levels = 1:13, 
@@ -213,8 +213,8 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
     select(-participant) %>%
     group_by(rating, condition, model, experiment, correct, rt) %>%
     summarise(dens = sum(dens*N)/nrow(Data), densscaled = sum(N*densscaled)/nrow(Data), .groups = "drop") %>%
-    mutate(model = factor(model, levels = c("dynaViTE", "2DSDT", "dynWEV", "2DSD"),
-                          labels = c("dynaViTE", "2DSDT", "dynWEV", "2DSD")), 
+    mutate(model = factor(model, levels = c("dynaViTE",  "dynWEV", "2DSDT","2DSD"),
+                          labels = c("dynaViTE", "dynWEV","2DSD+",  "2DSD")), 
            condition = factor(condition+ifelse(experiment=="Hellmann et al. (2023)\nExperiment 2", 5, 0)+
                                 ifelse(experiment=="Shekhar & Rahnev (2021)\nExperiment 4", 10, 0),
                               levels = 1:13, 
@@ -261,12 +261,12 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
 two_colors_correct <- c("#1b9e77", "#fc8d62")
 model_colors = c("#D81B60", "#1E88E5", "#FFC107","#004D40")
 
-## Figure 6: Plot of Mean Ratings                          ----
+## Figure 4: Plot of Mean Ratings                          ----
 pd <- position_dodge(0.02)
 Preds_MRating_corr_cond_plot <- mutate(Preds_MRating_corr_cond,
                                        confidence ="Confidence measure") 
 Data_MRating_corr_cond_plot <- merge(Data_MRating_corr_cond, 
-                                     expand.grid(model=c("dynaViTE", "dynWEV", "2DSDT", "2DSD"), 
+                                     expand.grid(model=c("dynaViTE", "dynWEV", "2DSD+", "2DSD"), 
                                                  confidence ="Confidence measure"))
 
 
@@ -311,7 +311,7 @@ ggsave("figures/meanRating1.tiff",
 ggsave("figures/meanRating1.eps",
        width = 17.62, height=14, units="cm",dpi=1200, device = cairo_ps)
 
-## Figure 7: RTQuantiles accross correct X rating          ----
+## Figure 6: RTQuantiles accross correct X rating          ----
 Data_RTQuants_corr_rating_plot <- Data_RTQuants_corr_rating %>%
   mutate(X = factor(paste(rating, correct, sep="."),
                     levels = c(paste(c(5:1, 1:5), rep(0:1, each=5), sep=".")),
@@ -321,7 +321,8 @@ Preds_RTQuants_corr_rating_plot <- Preds_RTQuants_corr_rating %>%
   mutate(X = factor(paste(rating, correct, sep="."),
                     levels = c(paste(c(5:1, 1:5), rep(0:1, each=5), sep=".")),
                     labels = c(paste(c(5:1, 1:5), rep(0:1, each=5), sep="."))),
-         model = factor(model, levels=c("dynaViTE", "dynWEV", "2DSDT", "2DSD")))%>% 
+         model = factor(model, levels=c("dynaViTE", "dynWEV", "2DSD+", "2DSD"),
+                        labels=c("dynaViTE", "dynWEV", "2DSD+", "2DSD")))%>% 
   filter(p %in% c(0.1, 0.5, 0.9))
 ggplot()+
   geom_line(data=mutate(Preds_RTQuants_corr_rating_plot, correct=factor(correct, labels=c("Wrong", "Correct")),
@@ -390,8 +391,14 @@ compute_bf <- function(x,y) {
   }
   res
 }
-## Table 2: dynaViTE vs. dynWEV and 2DSDT vs. 2DSD         ----
-BIC_BF_time_dep <-  fits %>%
+## Table 3: dynaViTE vs. dynWEV and 2DSDT vs. 2DSD         ----
+fits_1 <- fits
+load("SAT_Analysis/SATfits.RDATA")
+fits$experiment <- "Pleskac & Busemeyer\n(2010)"
+fits_SAT <- fits
+fits <- fits_1
+BIC_BF_time_dep <- rbind(fits[,c("participant", "model", "BIC", "experiment")],
+                         fits_SAT[,c("participant", "model", "BIC", "experiment")]) %>%
   mutate(time_dep = ifelse(model %in% c("dynaViTE", "2DSDT"), "general", "restricted"),
          model = ifelse(model %in% c("dynaViTE", "dynWEV"), "dynaViTE", "2DSDT")) %>%
   select(c("participant", "model","time_dep",  "BIC", "experiment")) %>%
@@ -403,23 +410,40 @@ BIC_BF_time_dep <-  fits %>%
             SDBIC = sd(restricted-general),
             SERBIC = sd(restricted-general)/sqrt(n()),
             compute_bf(restricted, general))%>% ungroup() %>%
-  mutate(model= factor(model)) %>% 
-  arrange(experiment, desc(model))
+  mutate(model= factor(model, levels=c("dynaViTE", "2DSDT"), labels=c("dynaViTE", "2DSD+")),
+         experiment = factor(experiment, ordered = TRUE,
+                             levels= c("Hellmann et al. (2023)\nExperiment 1" , "Hellmann et al. (2023)\nExperiment 2" , 
+                                       "Shekhar & Rahnev (2021)\nExperiment 4", "Pleskac & Busemeyer\n(2010)"))) %>%
+  arrange(experiment, model)
 BIC_BF_time_dep
 
 ## Figure 8: Comparison dynaViTE vs. all other models      ----
-descr_BIC <- fits[,c("participant", "model", "BIC", "experiment")] %>% 
+fits_1 <- fits
+load("SAT_Analysis/SATfits.RDATA")
+fits$experiment <- "Pleskac & Busemeyer\n(2010)"
+fits_SAT <- fits
+fits <- fits_1
+descr_BIC <- rbind(fits[,c("participant", "model", "BIC", "experiment")],
+                   fits_SAT[,c("participant", "model", "BIC", "experiment")])%>% 
   group_by(experiment) %>%
   reframe(Rmisc::summarySEwithin(pick(everything()), measurevar="BIC", withinvars = "model", idvar="participant")) %>%
-  mutate(model = factor(model, levels=rev(c("dynaViTE", "dynWEV", "2DSDT", "2DSD"))))
-plot_BF <- fits[,c("participant", "model", "BIC", "experiment")] %>%
+  mutate(model = factor(model, levels=rev(c("dynaViTE", "dynWEV", "2DSDT", "2DSD")),
+                        labels=rev(c("dynaViTE", "dynWEV", "2DSD+", "2DSD"))),
+         experiment = factor(experiment, ordered = TRUE,
+                             levels= c("Hellmann et al. (2023)\nExperiment 1" , "Hellmann et al. (2023)\nExperiment 2" , 
+                                 "Shekhar & Rahnev (2021)\nExperiment 4", "Pleskac & Busemeyer\n(2010)")))
+plot_BF <- rbind(fits[,c("participant", "model", "BIC", "experiment")],
+                 fits_SAT[,c("participant", "model", "BIC", "experiment")]) %>%
   group_by(model,participant, experiment) %>%  
   filter(model!="dynaViTE") %>% 
-  left_join(fits[fits$model=="dynaViTE",c("participant","BIC", "experiment")],
+  left_join(select(filter(rbind(fits[,c("participant", "model", "BIC", "experiment")],
+                         fits_SAT[,c("participant", "model", "BIC", "experiment")]),
+                   model=="dynaViTE"), -model),
             by=c("participant", "experiment")) %>%
   group_by(model, experiment) %>%
   summarise(compute_bf(BIC.x, BIC.y))%>% ungroup() %>%
-  mutate(model= factor(model)) %>%
+  mutate(model= factor(model, levels=c("2DSD", "2DSDT", "dynWEV"), 
+                       labels=c("2DSD", "2DSD+", "dynWEV"))) %>%
   mutate(BF_power = floor(log(bf, base=10)),
          BF_coeff = format(round(bf/10^BF_power, digits = 1),nsmall=1),
          BF_label=ifelse(BF_power > 1, paste0("BF==",format(BF_coeff, nsmall=1), "*x*10^~", BF_power),
@@ -429,14 +453,19 @@ plot_BF <- fits[,c("participant", "model", "BIC", "experiment")] %>%
                       minBIC = min(BIC),
                       rangediffBIC = diff(range(BIC)),
                       .groups="drop")) %>%
-  select(experiment, model, BF_label, rangediffBIC, minBIC) 
+  select(experiment, model, BF_label, rangediffBIC, minBIC) %>%
+  mutate(experiment = factor(experiment, ordered = TRUE,
+                             levels= c("Hellmann et al. (2023)\nExperiment 1" , "Hellmann et al. (2023)\nExperiment 2" , 
+                                       "Shekhar & Rahnev (2021)\nExperiment 4", "Pleskac & Busemeyer\n(2010)")))
 my_breaks <- function(x) { 
   if (max(x) > - 3990) {
     c(-4060, -4020, -3980)
   } else if (max(x) > -5600) {
     c(-5800, -5600, -5400)
+  } else if (max(x) > -11330) {
+    c(-11360, -11325, -11290)
   } else {
-    c(-11360, -11330, -11300)
+    -14500+1000*c(0, 1, 2)
   }
 }
 
@@ -445,9 +474,11 @@ p_BIC <- ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
   geom_errorbar(aes(ymin=-BIC-se, ymax=-BIC+se), width=0.2)+
   facet_nested(.~experiment, scales="free_x", axes="x", independent = "x")+
   #facet_nested(experiment~., scales="free_y", axes="y", independent = "y")+
-  geom_text(data=plot_BF, aes(label=BF_label, y=-minBIC), parse=TRUE,
+  geom_text(data=plot_BF, 
+            aes(label=BF_label, y=ifelse(grepl("Hellmann", experiment), -minBIC-0.1*rangediffBIC, -minBIC)), 
+            parse=TRUE,
             hjust=0, vjust=0.5, size=12/.pt)+
-  geom_point(data=plot_BF, aes(y=-minBIC+0.8*rangediffBIC), alpha=0)+
+  geom_point(data=plot_BF, aes(y=-minBIC+0.75*rangediffBIC), alpha=0)+
   scale_y_continuous(breaks = my_breaks)+
   coord_flip()+
   xlab("")+ylab("-BIC")+
@@ -461,11 +492,71 @@ p_BIC <- ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
         strip.text = element_text(size=14),
         legend.text = element_text(
           margin = margin(l = 4, r=4, t=2, b=2,unit = "pt")))
+p_BIC
 ggsave("figures/BIClines_againstdynavite.eps", plot=p_BIC,
        width=17.62, height=7, dpi=1200, units="cm", device=cairo_ps)
 ggsave("figures/BIClines_againstdynavite.jpg", plot=p_BIC,
-       width = 22, height=7, units="cm",dpi=1200)
+       width = 27, height=6, units="cm",dpi=1200)
 
+## Figure 9: BIC weights for individual participants      ----
+
+BICweights <- rbind(fits[,c("participant", "model", "BIC", "experiment")],
+                    fits_SAT[,c("participant", "model", "BIC", "experiment")]) %>%
+  arrange(experiment, participant, model) %>%
+  group_by(experiment, participant) %>%
+  mutate(BICdiff = BIC-min(BIC),
+         expBICdiff = exp(-0.5*(BIC-min(BIC))),
+         wBIC = expBICdiff / sum(expBICdiff)) %>%
+  ungroup()  %>%
+  mutate(experiment = factor(experiment, ordered = TRUE,
+                             levels= c("Hellmann et al. (2023)\nExperiment 1" , "Hellmann et al. (2023)\nExperiment 2" , 
+                                       "Shekhar & Rahnev (2021)\nExperiment 4", "Pleskac & Busemeyer\n(2010)")))
+# ggplot(BICweights, aes(x=model, y=wBIC))+
+#   geom_bar(stat = "identity")
+BICweights_long <- BICweights %>% ungroup() %>% select(experiment, model,participant, wBIC) %>% pivot_wider(names_from = model, values_from = wBIC) %>%
+  mutate(temp0 = ifelse(dynaViTE>0.8, dynaViTE, 0),
+         temp1 = dynWEV+dynaViTE, 
+         temp2 = `2DSDT`+dynWEV+dynaViTE) %>%
+  arrange(desc(temp0), desc(temp1), desc(temp2)) %>%
+  group_by(experiment) %>% mutate(plotorder = 1:n()) %>% ungroup() %>% 
+  pivot_longer(3:(6), names_to="model", values_to="wBIC") %>% 
+  mutate(model=factor(model, levels=c("dynaViTE", "dynWEV", "2DSDT", "2DSD"),
+                      labels=c("dynaViTE", "dynWEV", "2DSD+", "2DSD")), 
+         experiment = str_replace(experiment, "\n", " ")) %>%
+  mutate(experiment = factor(experiment, ordered = TRUE,
+                             levels= c("Hellmann et al. (2023) Experiment 1" , "Hellmann et al. (2023) Experiment 2" , 
+                                       "Shekhar & Rahnev (2021) Experiment 4", "Pleskac & Busemeyer (2010)")))
+ggplot(BICweights_long, aes(x=plotorder, y=wBIC, fill=model))+
+  geom_bar(stat = "identity")+
+  scale_fill_viridis_d(name="Model", option = "C")+
+  ylab("BIC weight")+
+  facet_wrap(.~experiment, scales = "free_x", nrow = 3, labeller = label_value)+
+  scale_x_continuous(name="", breaks=c(1, 5, 10, 15, 20, 25, 30, 35, 40))+
+  theme_bw() +
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"),
+        text = element_text(size=12, family="Times"),
+        axis.title.x = element_blank(),
+        axis.text = element_text(size=9, family="Times", color="black"),
+        axis.text.y = element_text(hjust = 1), #( angle=90, hjust = 0.5),
+        # panel.grid.minor = element_blank(),  # switch off minor gridlines
+        # panel.grid.major = element_blank(),
+        strip.text = element_text(size=12),
+        legend.text = element_text(
+          margin = margin(l = 4, r=0, t=2, b=2,unit = "pt")))
+# theme_minimal()+
+#   theme(plot.margin = margin(0.1, 0, 0.1, 0, "cm"),
+#         text = element_text(size=12, family="Times"),
+#         panel.grid.minor = element_blank(),  # switch off minor gridlines
+#         panel.grid.major.x = element_blank(),
+#         axis.text = element_text(size=12, family="Times", color="black"),
+#         axis.title.y = element_text( angle=90, family = "Times"),
+#         #strip.text = element_blank(), strip.background = element_blank(),
+#         legend.key.height = unit(0.7, "cm"),
+#         legend.key.width = unit(0.7, "cm"))
+ggsave("figures/BICweights.tiff",
+       width = 22, height=8.5, units="cm",dpi=600)
+ggsave("figures/BICweights.jpg", 
+       width = 22, height=8.5,  units="cm",dpi=600)
 #__________________________________________________________----
 # D  dynaViTE and dynWEV parameter analysis                ----
 experiment_colors = c("#AA4499","#117733", "#DDCC77")
@@ -482,7 +573,7 @@ parfits_long_dynaViTEdynWEV <- fits %>% filter(model %in% c("dynaViTE", "dynWEV"
   pivot_longer(cols = t0:v5, names_to ="parameter", values_to="fit") %>%
   pivot_wider(names_from = model, values_from=fit) %>%
   mutate(parameter = factor(parameter, levels = par_levels,labels = par_labels))
-## Table 3: Mean proportion of tau, t0, and decision time  ----
+## Table 4: Mean proportion of tau, t0, and decision time  ----
 mean_posttime <- data.frame()
 for (i in 1:4 ) {
   curmodel <- unique(fits$model)[i]
@@ -503,7 +594,7 @@ mean_posttime <- mean_posttime[,c(2,1,3,4,5)] %>%
 write.table(mean_posttime, file="figures/data_accuracies.txt",
             sep = ",", quote = FALSE, row.names = F)
 
-## Figure 9: Trade-off between tau and t0                  ----
+## Figure 10: Trade-off between tau and t0                  ----
 
 diff_dynaViTE_vs_dynWEV_in_tau_and_t0 <- parfits_long_dynaViTEdynWEV %>% 
   filter(parameter %in% c("tau", "t[0]")) %>%
@@ -535,7 +626,7 @@ ggsave("figures/differencetaut0.eps", plot=p_taut0,
        width = 6.49, height=6.5, units="cm",dpi=600, device = cairo_ps)
 
 
-## Figure 10: Cor DDM parameters btw dynaViTE and dynWEV   ----
+## Figure 11: Cor DDM parameters btw dynaViTE and dynWEV   ----
 DDMparfits_long_dynaViTEdynWEV <- parfits_long_dynaViTEdynWEV  %>%
   filter(!grepl("theta|V|w|tau", parameter)) 
 
@@ -580,6 +671,8 @@ ggsave("figures/parametersDynWEVdynaViTE.tiff",
        width = 17.625, height=12, units="cm",dpi=600)
 ggsave("figures/parametersDynWEVdynaViTE.eps",
        width = 17.625, height=12, units="cm",dpi=600, device = cairo_ps)
+
+
 
 #__________________________________________________________----
 # E  Parameter and model recovery                          ----
@@ -775,7 +868,7 @@ ggsave("figures/Identification_Accuracy.tiff",
        width = 8, height=9, units="cm",dpi=600)   # Filling a whole power point slide
 
 
-## Figure 12: True and recovered dynaViTE parameters       ----
+## Figure 13: True and recovered dynaViTE parameters       ----
 experiment_colors = c("#AA4499","#117733", "#DDCC77")
 par_labels <- c('nu[1]', 'nu[2]', 'nu[3]', 'nu[4]', 'nu[5]', 's[nu]', 'a', 'z', 's[z]', 
                 't[0]', 's[t0]', 'tau', 'w', 'sigma[V]', 's[V]', 'lambda',
@@ -846,7 +939,37 @@ ggsave("figures/parameterstruerecovered.eps",
 
 #__________________________________________________________----
 # F  Discussion and Supplement                             ----
-## Table 4: Accuracy and w parameter                       ----
+## Figure 14: Distribution of fitted lambda values         ----
+lambdas <- rbind(fits[,c("experiment", "model", "lambda")],
+                 fits_SAT[,c("experiment", "model", "lambda")])%>%
+  filter(model %in% c("2DSDT", "dynaViTE")) %>%
+  mutate(model=factor(model, levels=c("dynaViTE", "2DSDT"),
+                      labels=c("dynaViTE", "2DSD+")),
+         experiment = factor(experiment, 
+                             levels=c("Hellmann et al. (2023)\nExperiment 1", "Hellmann et al. (2023)\nExperiment 2", 
+                                      "Shekhar & Rahnev (2021)\nExperiment 4", "Pleskac & Busemeyer\n(2010)")))
+ggplot(lambdas, aes(x=lambda, group=interaction(experiment, model)))+
+  #geom_histogram(aes(y = after_stat(count / sum(count))), bins = 20)+
+  geom_histogram(aes(y =  stat(width*density)), bins = 20)+
+  facet_nested(cols=vars(experiment), rows=vars(model))+
+  scale_y_continuous(labels = scales::percent, name="Frequency")+
+  xlab(parse(text="Fitted~lambda~parameter"))+
+  theme_bw()+
+  theme(plot.margin = margin(0, 0.5, 0, 0, "cm"),
+        panel.spacing = unit(0, "cm"),
+        text = element_text(size=9, family="Times"),
+        panel.grid.minor = element_blank(),  # switch off minor gridlines
+        panel.grid.major = element_blank(),
+        legend.position = c(0.78, 0.28), legend.justification = c(0, 1),
+        axis.text = element_text(size=9, family="Times", color="black"),
+        axis.title.y = element_text( angle=90),
+        strip.text = element_text(size=9))
+ggsave("figures/fittedLambdas.tiff",
+       width = 17.625, height=6, units="cm",dpi=600)
+ggsave("figures/fittedLambdas.eps",
+       width = 17.625, height=6, units="cm",dpi=600, device = cairo_ps)
+
+## Table 5: Accuracy and w parameter                       ----
 fitted_w <- fits %>% filter(model%in% c("dynWEV","dynaViTE")) %>%
   group_by(model,  experiment) %>%
   summarise(Meanw=mean(w), 
@@ -872,7 +995,7 @@ Accuracies <- Data_Acc %>%
 Accuracies <- Accuracies %>% right_join(fitted_w)
 write.table(Accuracies, file="figures/data_accuracies.txt",
             sep = ",", quote = FALSE, row.names = F)
-## Suppl Fig 6: Plot of Fitted Accuracy                    ----
+## Suppl Fig 4: Plot of Fitted Accuracy                    ----
 Data_Acc <- Data %>% group_by(participant, experiment, condition) %>%
   summarise(Acc = mean(correct), .groups="drop") %>%
   group_by(experiment) %>%
@@ -916,13 +1039,15 @@ p_Acc <- ggplot(Data_Acc,
 p_Acc
 
 dir.create("figures", showWarnings = FALSE)
-ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/modelAccuracy1.eps",
+ggsave("C:/Users/PPA859/OneDrive - ku.de/Forschung/Manuskripte/TimeInDynWEV/Supplement/figures/modelAccuracy1.eps",
        width = 17.62, height=17, units="cm",dpi=600, device = cairo_ps)
 ggsave("figures/modelAccuracy1.tiff",
        width = 17.62, height=9/0.75, units="cm",dpi=600)
 
 ## Suppl Table 1: Descriptive parameter fits dynaViTE      ----
 meanFits <- fits %>% 
+  mutate(model = factor(model, levels=c("dynaViTE", "dynWEV", "2DSDT", "2DSD"),
+                        labels=c("dynaViTE", "dynWEV", "2DSD+", "2DSD"))) %>%
   select(-c("participant", "k", "N", "AICc","BIC", "AIC", "negLogLik","fixed")) %>%
   group_by(experiment, model) %>% 
   summarise(across(.cols = everything(),
@@ -970,7 +1095,7 @@ Fits_wordtable <- flextable(meanFits_long) %>%
   align(align="left", j=1) %>%
   align(align="center", j=2:4)
 save_as_docx("Parameter table"=Fits_wordtable,
-             path="../Draft/tablepars.docx")
+             path="../../Draft/tablepars.docx")
 print(Fits_wordtable, preview="docx")
 
 # Use xtable for latex output
@@ -982,11 +1107,11 @@ library(xtable)
 # Use this to produce a long table with all model fits
 meanFits_long <- meanFits %>% 
   # Report only dynaViTE model  
-  pivot_longer(cols = 3:(ncol(meanFits)-1), names_to = "Parameter") %>%
+  pivot_longer(cols = 3:(ncol(meanFits)), names_to = "Parameter") %>%
   pivot_wider(id_cols = "Parameter", names_from = c("experiment", "model"), values_from = value) 
 meanFits_long
 Fits_textable <- xtable(meanFits_long, align = c("l", "l", rep("c", ncol(meanFits_long)-1)),
-                        caption="\\raggedright Mean and standard deviation of parameter fits")
+                        caption="\\raggedright Mean and standard deviation of parameter fits ($t_0$, $st_0$, and $\\tau$ measured in seconds)")
 names(Fits_textable) <- 
   c("Model", str_split_i(names(Fits_textable)[2:ncol(Fits_textable)], "_", 2))
 experimentlabels <- str_replace(str_replace(unique(meanFits$experiment),"\n", " "), "&", "\\\\&")
@@ -1005,7 +1130,7 @@ print(Fits_textable, type="latex",
       caption.placement="top",
       table.placement="hp")
 print(Fits_textable, type="latex", 
-      file="C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/tablepars2.tex",
+      file="../../Supplement/figures/tablepars2.tex",
       sanitize.text.function=function(x){x}, 
       include.rownames=FALSE, 
       add.to.row=addtorow, 
@@ -1019,7 +1144,7 @@ print(Fits_textable, type="latex",
 #   select(c(1, 5, 3, 4, 2, 9, 7, 8, 6, 13, 11, 12, 10))
 # meanFits_long
 
-## Suppl Fig 7-9: Fitted response distributions            ----
+## Suppl Fig 6-8: Fitted response distributions            ----
 model_colors = c("#D81B60", "#1E88E5", "#FFC107","#004D40")
 for (i in 1:3) {
   cur_experiment <- sort(unique(fits$experiment))[i]
@@ -1056,7 +1181,7 @@ for (i in 1:3) {
                 str_replace_all(cur_experiment, c("\n"="", " "="", "\\("="", "\\)"="", "\\."="")),
                 ".tiff"),
          width=17.3, height=18, units="cm",dpi=1200)
-  ggsave(paste0("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/RespDist", 
+  ggsave(paste0("C:/Users/PPA859/OneDrive - ku.de/Forschung/Manuskripte/TimeInDynWEV/Supplement/figures/RespDist", 
                 str_replace_all(cur_experiment, c("\n"="", " "="", "\\("="", "\\)"="", "\\."="")),
                 ".eps"),
          width=17.3, height=18, units="cm",dpi=1200, device = cairo_ps)

@@ -1,10 +1,10 @@
-### Simulation of the 2DSDT model 
-# This simulation should demonstrate that the 2DSDT model (2DSD with a 
+### Simulation of the 2DSD+ model 
+# This simulation should demonstrate that the 2DSD+ model (2DSD with a 
 # time dependent confidence measure) is able to predict a double-increase model
 # under certain parameter sets
 
-# The Code produces Figure 1 in the paper
-# and Suppl. Figure 1 
+# The Code produces Figure 2 in the paper
+# and Suppl. Figure 3
 
 # Preamble and imports                                     ----
 rm(list = ls())

@@ -1,9 +1,12 @@
-### Computation of optimal confidence 
-# Visualization of the posterior probability of being correct 
-# given decision evidence, decision time, and visibility state
+## Visualization of the posterior probability of being correct
+# as a function of decision time, decision evidence, and visibility evidence
+# for different distribution for the levels of stimulus discriminability:
+# Figure 1: Discrete uniformly distribution (most experimental manipulations)
+# Suppl. Fig. 1: Continuously uniform distribution
+# Suppl. Fig. 2: Folded normal distribution
 
-# This code produces Figure 5 and
-# Supplementary Figures 4 and 5 in the paper. 
+# This code produces Figure 1 and
+# Supplementary Figures 1 and 2 in the paper. 
 
 # Preamble and imports                                     ----
 rm(list = ls())
@@ -29,7 +32,7 @@ contour_breaks = 2:9/10
 dir.create("figures",showWarnings = FALSE)
 
 #########################################################################
-#######   Discrete uniform distribution           #######################
+#######   Figure 1: Discrete uniform distribution           #############
 #########################################################################   
 Ds <- as.numeric(paramDf[,paste("v", 1:5, sep="")])
 odds_fct <- function(RT, X, V, Ds, a, z, sv, tau, svis, sigvis, ...) {
@@ -162,12 +165,10 @@ gDec <- ggplot(data = predsDec, aes(x = vis, y = rt, z = fill))  +
 ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom")
 ggsave("figures/posterior_prob_corrects.tiff",
        width = 13.62, height=6, units="cm",dpi=900)
-# ggsave("figures/modelAccuracy1.eps",
-#        width = 17.62, height=14, units="cm",dpi=600, device = cairo_ps)
 
 
 #########################################################################
-#######  Coninuous uniform distribution           #######################
+#######  Suppl. Fig. 2_ Coninuous uniform distribution          #########
 #########################################################################        
 Ds <- matrix(c(1.0, 1.2, 
               0.3, 2.4, 
@@ -310,12 +311,14 @@ ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom",
                   widths=c(0.32, 0.32, 0.36))
 ggsave("figures/posterior_prob_corrects_unifdist.tiff",
       width = 17.62, height=16, units="cm",dpi=900, bg="white")
-ggsave("figures/posterior_prob_corrects_unifdist.eps",
-       width = 17.62, height=16, units="cm",dpi=1200, device = cairo_ps)
+# ## Only for manuscript generation
+# ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/posterior_prob_corrects_unifdist.eps",
+#        width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
+
 
 
 #########################################################################
-#######    Absolute normal distribution           #######################
+#######  Suppl. Fig. 3: Absolute normal distribution         ############
 #########################################################################        
 SDs <- c(1,2,3)
 odds_fct <- function(RT, X, V,sd, a, z, sv, tau, svis, sigvis, ...) {
@@ -453,6 +456,7 @@ ggarrange(gRT, gVis, gDec, nrow=1, common.legend = TRUE, legend="bottom",
                   widths=c(0.32, 0.32, 0.36))
 ggsave("figures/posterior_prob_corrects_absnorm.tiff",
        width = 17.62, height=16, units="cm",dpi=900, bg="white")
-ggsave("figures/posterior_prob_corrects_absnorm.eps",
-       width = 17.62, height=16, units="cm",dpi=1200, device = cairo_ps)
+# ## Only for manuscript generation
+# ggsave("C:/Users/PPA859/Documents/Manuskripte/TimeInDynWEV/Supplement/figures/posterior_prob_corrects_absnorm.eps",
+#        width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
 

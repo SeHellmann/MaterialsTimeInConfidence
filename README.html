@@ -359,28 +359,40 @@ display: none;
 <strong>Confidence is influenced by evidence accumulation time in
 dynamical decision models</strong> (Hellmann, S., Zehetleitner, M.,
 &amp; Rausch, M. (preprint: <a href="https://osf.io/preprints/psyarxiv/5ze8t/" class="uri">https://osf.io/preprints/psyarxiv/5ze8t/</a>). Data was
-previously published in Hellmann, et al. (2023) and Shekhar &amp; Rahnev
-(2021).</p>
+previously published in Hellmann, et al. (2023), Shekhar &amp; Rahnev
+(2021), and Pleskac &amp; Busemeyer (2010).</p>
 <div id="structure" class="section level2">
 <h2>Structure:</h2>
 <ul>
 <li>dynConfiR-source package file (.tar.gz) (development version of the
 dynConfiR package used for analyses)</li>
-<li>“ModelAnalysis”: folder with code to produce figures in the formal
-model analysis section including simulation of KL distances and mean
-confidence in the dynaViTE model and a shiny application to play with
-parameters in figure X.</li>
+<li>“ModelAnalysis”: folder with code to produce simulations of models
+(double-increase pattern in 2DSD+, Ornstein-Uhlenbeck model simulations,
+and simulations and computations of optimal confidence)</li>
 <li>“EmpiricalStudy”: folder with
 <ul>
 <li>“data” folder containing .RData files with the raw data (.csv’s are
-available at the confidence database (<a href="https://osf.io/s46pr/" class="uri">https://osf.io/s46pr/</a>))</li>
+available at the confidence database (<a href="https://osf.io/s46pr/" class="uri">https://osf.io/s46pr/</a>)) for the first three experiments
+analysed</li>
 <li>Main_Script.R file which includes all analysis, from model fitting
 to prediction, data aggregation, visualization, and quantitative
 comparison. This file is structured in sections which can be folded and
 unfolded in RStudio</li>
 <li>several .RData files with saved results, which are loaded in
 Main_Script.R to avoid time-consuming computations (like model fitting),
-when check reproducibility</li>
+when checking reproducibility</li>
+<li>a subfolder “SAT_Analysis”, which contains the analysis of the
+fourth experiment
+<ul>
+<li>LineStudyData.csv the raw data published by Pleskac &amp; Busemeyer
+(2010)</li>
+<li>fitting_fcts a folder with helper functions to fit the models and
+simulate predictions (because the fitting routines for these experiments
+are not available in the dynConfiR package)</li>
+<li>SAT_Main_Script.R calls the fitting functions in the fitting_fct
+folder and generates visualizations of the results</li>
+<li>several .RDATA files including saved results</li>
+</ul></li>
 </ul></li>
 <li>sessionInfo.txt with the text-output of the sessionInfo()
 function</li>
@@ -409,7 +421,8 @@ CRAN mirror)</li>
 <pre><code>install.packages(c(&quot;&quot;BayesFactor&quot;, &quot;tidyverse&quot;, &quot;Rmisc&quot;, &quot;ggh4x&quot;, &quot;ggpubr&quot;, &quot;FNN&quot;)) </code></pre>
 <ul>
 <li>To redo the whole analyses, run
-<code>EmpiricalStudy/Main_Script.R</code></li>
+<code>EmpiricalStudy/Main_Script.R</code> and
+<code>EmpiricalStudy/SAT_Analysis/SAT_Main_Script.R</code></li>
 <li>If some <code>.RData</code> files from the repository are missing,
 the respective computations will be carried out again, which may take
 some time</li>
@@ -423,11 +436,14 @@ PMID: 36913292.</p>
 <p>Shekhar, M., &amp; Rahnev, D. (2021). The nature of metacognitive
 inefficiency in perceptual decision making. Psychological Review,
 128(1), 45–70. <a href="https://doi.org/10.1037/rev0000249" class="uri">https://doi.org/10.1037/rev0000249</a></p>
+<p>Pleskac, T. J., &amp; Busemeyer, J. (2010). Two-stage Dynamic Signal
+Detection: A Theory of Choice, Decision Time, and Confidence.
+Psychological Review, 117(3). <a href="https://doi.org/10.1037/a0019737" class="uri">https://doi.org/10.1037/a0019737</a></p>
 </div>
 </div>
 <div id="contact" class="section level2">
 <h2>Contact</h2>
-<p>For comments, remarks, and questions please contact me: <a href="mailto:sebastian.hellmann@ku.de" class="email">sebastian.hellmann@ku.de</a></p>
+<p>For comments, remarks, and questions please contact me: <a href="mailto:sebastian.hellmann@tum.de" class="email">sebastian.hellmann@tum.de</a></p>
 </div>
 </div>
 
