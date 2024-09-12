@@ -39,6 +39,8 @@ print(getwd())
   #library(xtable)   # for latex tables
   library(ggh4x)  # for facet_nested
   library(parallel)
+  # To use Times as font on Windows (otherwise ignore the ggplot warnings)
+  windowsFonts(Times=windowsFont("Times New Roman"))
 }
 
 
@@ -257,6 +259,7 @@ if (!file.exists("collected_Data_Fits_Predicts.RData")) {
 #__________________________________________________________----
 # B  Generate visualizations                               ----
 ## Include font style and define colors for plots          ----
+# Use: extrafont::loadfonts() to permanently add Times 
 #windowsFonts(Times=windowsFont("Times New Roman"))
 two_colors_correct <- c("#1b9e77", "#fc8d62")
 model_colors = c("#D81B60", "#1E88E5", "#FFC107","#004D40")
@@ -308,8 +311,8 @@ p_MRating
 dir.create("figures", showWarnings = FALSE)
 ggsave("figures/meanRating1.tiff",
        width = 17.62, height=9/0.7, units="cm",dpi=600)
-ggsave("figures/meanRating1.eps",
-       width = 17.62, height=14, units="cm",dpi=1200, device = cairo_ps)
+# ggsave("figures/meanRating1.eps",
+#        width = 17.62, height=9/0.7, units="cm",dpi=600, device = cairo_ps)
 
 ## Figure 6: RTQuantiles accross correct X rating          ----
 Data_RTQuants_corr_rating_plot <- Data_RTQuants_corr_rating %>%
@@ -365,8 +368,8 @@ ggplot()+
         legend.key.width=unit(1.5,"line"),
         panel.spacing=unit(0, "lines"))
 
-ggsave("figures/RTQuantsConf1.eps",
-       width=17.62, height=15, dpi=1200, units="cm", device=cairo_ps)
+# ggsave("figures/RTQuantsConf1.eps",
+#        width=15, height=13, dpi=600, units="cm", device=cairo_ps)
 ggsave("figures/RTQuantsConf.tiff",
        width = 15, height=13, units="cm",dpi=600)   # Filling a whole power point slide
 # ggsave("../../Draft/figures/results/RTQuantsConf1.eps",
@@ -494,7 +497,7 @@ p_BIC <- ggplot(descr_BIC, aes(x=model, y=-BIC, group=experiment))+
           margin = margin(l = 4, r=4, t=2, b=2,unit = "pt")))
 p_BIC
 ggsave("figures/BIClines_againstdynavite.eps", plot=p_BIC,
-       width=17.62, height=7, dpi=1200, units="cm", device=cairo_ps)
+       width=27, height=8, dpi=600, units="cm", device=cairo_ps)
 ggsave("figures/BIClines_againstdynavite.jpg", plot=p_BIC,
        width = 27, height=6, units="cm",dpi=1200)
 
@@ -553,6 +556,8 @@ ggplot(BICweights_long, aes(x=plotorder, y=wBIC, fill=model))+
 #         #strip.text = element_blank(), strip.background = element_blank(),
 #         legend.key.height = unit(0.7, "cm"),
 #         legend.key.width = unit(0.7, "cm"))
+ggsave("figures/BICweights.eps", 
+       width=20, height=9, dpi=600, units="cm", device=cairo_ps)
 ggsave("figures/BICweights.tiff",
        width = 22, height=8.5, units="cm",dpi=600)
 ggsave("figures/BICweights.jpg", 
@@ -622,8 +627,11 @@ p_taut0 <- ggplot(diff_dynaViTE_vs_dynWEV_in_tau_and_t0,
 p_taut0
 ggsave("figures/differencetaut0.tiff", plot=p_taut0,
        width = 6.49, height=6.5, units="cm",dpi=600)
+p_taut0 <- p_taut0 +
+  theme(legend.position = "right")
+p_taut0
 ggsave("figures/differencetaut0.eps", plot=p_taut0,
-       width = 6.49, height=6.5, units="cm",dpi=600, device = cairo_ps)
+       width = 10, height=4, units="cm",dpi=1200, device = cairo_ps)
 
 
 ## Figure 11: Cor DDM parameters btw dynaViTE and dynWEV   ----
@@ -646,7 +654,7 @@ ggplot(filter(DDMparfits_long_dynaViTEdynWEV, abs(dynWEV)<1e+6 & abs(dynaViTE) <
        aes(x=dynWEV, y=dynaViTE, color=experiment))+
   geom_smooth(data=filter(DDMparfits_long_dynaViTEdynWEV, abs(dynWEV)<1e+6 & abs(dynaViTE) < 1e+6),  
               method="lm", alpha=0.5, linewidth=0.9, 
-              aes(x=dynWEV, y=dynaViTE), formula = 'y~x', inherit.aes = FALSE)+
+              aes(x=dynWEV, y=dynaViTE), formula = 'y~x-1', inherit.aes = FALSE)+
   facet_wrap(.~parameter, scales = "free", labeller = label_parsed, 
              drop = TRUE, ncol=4)+
   geom_abline(col="black", linewidth=1, alpha=0.2)+
@@ -669,6 +677,34 @@ ggplot(filter(DDMparfits_long_dynaViTEdynWEV, abs(dynWEV)<1e+6 & abs(dynaViTE) <
         strip.text = element_text(size=9))
 ggsave("figures/parametersDynWEVdynaViTE.tiff",
        width = 17.625, height=12, units="cm",dpi=600)
+
+ggplot(filter(DDMparfits_long_dynaViTEdynWEV, abs(dynWEV)<1e+6 & abs(dynaViTE) < 1e+6), 
+       aes(x=dynWEV, y=dynaViTE, color=experiment))+
+  geom_smooth(data=filter(DDMparfits_long_dynaViTEdynWEV, abs(dynWEV)<1e+6 & abs(dynaViTE) < 1e+6),  
+              method="lm", alpha=0.5, linewidth=0.9, 
+              aes(x=dynWEV, y=dynaViTE), formula = 'y~x', inherit.aes = FALSE)+
+  facet_wrap(.~parameter, scales = "free", labeller = label_parsed, 
+             drop = TRUE, ncol=4)+
+  geom_abline(col="black", linewidth=1, alpha=0.2)+
+  geom_abline(data=slopes, aes(slope=slope, intercept=0),col="red",linewidth=1, alpha=0.2)+
+  scale_color_manual(name="", values=experiment_colors)+
+  geom_point(alpha=0.5)+ scale_shape_discrete("")+
+  geom_text(data = est_cors, #mutate(est_cors, experiment="Experiment 1"),
+            aes(x=x_min, y=y_max,
+                label=paste0(format(round(cor, 2), nsmall=2))),#"rho == ",
+            color="black",
+            parse=TRUE, hjust=1, vjust=0)+
+  theme_bw()+ylab("Fitted parameter for dynaViTE")+xlab("Fitted parameter for dynWEV")+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"),
+        text = element_text(size=12, family="Times"),
+        panel.grid.minor = element_blank(),  # switch off minor gridlines
+        panel.grid.major = element_blank(),
+        legend.position = c(0.72, 0.35), legend.justification = c(0, 1),
+        legend.background = element_blank(), legend.key = element_blank(),
+        legend.key.height = unit(1, "cm"),
+        axis.text = element_text(size=12, family="Times", color="black"),
+        axis.title.y = element_text( angle=90),
+        strip.text = element_text(size=12))
 ggsave("figures/parametersDynWEVdynaViTE.eps",
        width = 17.625, height=12, units="cm",dpi=600, device = cairo_ps)
 
@@ -865,7 +901,9 @@ ggpubr::ggarrange(gen_model_identification, total_identification,
   ggpubr::bgcolor("white")+
   ggpubr::border("white")
 ggsave("figures/Identification_Accuracy.tiff",
-       width = 8, height=9, units="cm",dpi=600)   # Filling a whole power point slide
+       width = 8, height=9, units="cm",dpi=600)   
+ggsave("figures/Identification_Accuracy.eps",
+       width = 8, height=9, units="cm",dpi=600, device = cairo_ps)   
 
 
 ## Figure 13: True and recovered dynaViTE parameters       ----
@@ -880,7 +918,7 @@ par_levels <- c('v1', 'v2', 'v3', 'v4', 'v5', 'sv', 'a', 'z', 'sz',
                 paste0('thetaUpper',1:4))
 comp_true_rec_dynaViTE <- mimikry_collected_results %>% 
   filter(gen_model =="dynaViTE" & model=="dynaViTE") %>%
-  select(par_levels, participant, simu, experiment) %>%
+  select(all_of(par_levels), participant, simu, experiment) %>%
   mutate(true_rec="recovered") %>%
   rbind(mutate(select(true_pars,simu, participant, experiment,
                       par_levels), true_rec="true"))
@@ -933,6 +971,34 @@ ggplot(filter(comp_true_rec_dynaViTE, abs(true)<1e+6 & abs(recovered) < 1e+6),
         strip.text = element_text(size=9))
 ggsave("figures/parameterstruerecovered.tiff",
        width = 17.625, height=21, units="cm",dpi=600)
+ggplot(filter(comp_true_rec_dynaViTE, abs(true)<1e+6 & abs(recovered) < 1e+6), 
+       aes(x=true, y=recovered, color=experiment))+
+  geom_smooth(data=filter(comp_true_rec_dynaViTE, abs(true)<1e+6 & abs(recovered) < 1e+6),  
+              method="lm", alpha=0.5, linewidth=0.9, 
+              aes(x=true, y=recovered), formula = 'y~x', inherit.aes = FALSE)+
+  facet_wrap(.~parameter, scales = "free", labeller = label_parsed, 
+             drop = TRUE, ncol=4)+
+  geom_abline(col="black", linewidth=1, alpha=0.2)+
+  scale_color_manual(name="", values=experiment_colors)+
+  geom_point(alpha=0.5)+ scale_shape_discrete("")+
+  geom_text(data = est_cors, #mutate(est_cors, experiment="Experiment 1"),
+            aes(x=x_min, y=y_max,
+                label=paste0(format(round(est, 2), nsmall=2))),#"rho == ",
+            color="black",
+            parse=TRUE, hjust=1, vjust=0)+
+  scale_x_continuous(breaks=scales::pretty_breaks(3))+
+  scale_y_continuous(breaks=scales::pretty_breaks(3))+
+  theme_bw()+ylab("Recovered parameter")+xlab("True generating parameter")+
+  theme(plot.margin = margin(0, 0, 0, 0, "cm"),
+        text = element_text(size=12, family="Times"),
+        panel.grid.minor = element_blank(),  # switch off minor gridlines
+        panel.grid.major = element_blank(),
+        legend.direction = "vertical", legend.key.height = unit(0.6, "cm"),
+        legend.background = element_blank(),legend.margin = margin(-0.8,0,0,0,"cm"),
+        legend.position ="bottom",# c(0.5, 0), legend.justification = c(0.5, 1),
+        axis.text = element_text(size=12, family="Times", color="black"),
+        axis.title.y = element_text( angle=90),
+        strip.text = element_text(size=12))
 ggsave("figures/parameterstruerecovered.eps",
        width = 17.625, height=21, units="cm",dpi=600, device = cairo_ps)
 

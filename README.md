@@ -39,7 +39,7 @@ install.packages("dynWEV_0.0.3.tar.gz", type = "source", dependencies=TRUE,repos
 <!-- -->
 
 ```         
-install.packages(c(""BayesFactor", "tidyverse", "Rmisc", "ggh4x", "ggpubr", "FNN")) 
+install.packages(c("BayesFactor", "tidyverse", "Rmisc", "ggh4x", "ggpubr", "FNN")) 
 ```
 
 -   To redo the whole analyses, run `EmpiricalStudy/Main_Script.R` and `EmpiricalStudy/SAT_Analysis/SAT_Main_Script.R`

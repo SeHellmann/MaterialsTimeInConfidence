@@ -3,7 +3,7 @@
 # Computation of the KL distance of visibility btw correct and incorrect decisions
 
 # This code produces Figure 15 and
-# Supplementary Figures 12 and 13 in the paper. 
+# Supplementary Figures 13 and 14 in the paper. 
 
 # Preamble and imports                                     ----
 rm(list = ls())
@@ -57,7 +57,7 @@ dir.create("figures", showWarnings = FALSE)
 
 ##############################################################################
 ###### Figures 15: Simulated mean confidence and                    ##########
-###### Suppl. Fig. 13: KL distance for visibility                   ##########
+###### Suppl. Fig. 14: KL distance for visibility                   ##########
 ######       for different Vrange and sigvis(&svis)                 ##########
 ##############################################################################
 paramDf <- as.data.frame(list(a=2, z=0.5, sz=0, sv=0,
@@ -136,8 +136,8 @@ p_MeanOptConf <- ggplot(subset(meanconf,Vrange>0.4), aes(x=d, y=Mconf, color=as.
   custom_theme()+theme(legend.position = "bottom")
 p_MeanOptConf
 # # Only for manuscript generation
-# ggsave("figures/MeanOptimalConf.eps",
-#        width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
+ggsave("figures/MeanOptimalConf.eps",
+       width = 17.62, height=15, units="cm",dpi=600, device = cairo_ps)
 ggsave("figures/MeanOptimalConf.tiff", plot = p_MeanOptConf, 
        width = 17.62, height=15, units="cm",dpi=600)
 
@@ -161,7 +161,7 @@ ggsave("figures/KLvisibility.tiff", plot=p_KLvisibility,
 
 
 ##########################################################################
-###### SupplFig 12: Mean Opt Conf Simulation tau and sv   ################
+###### SupplFig 13: Mean Opt Conf Simulation tau and sv   ################
 ##########################################################################
 Tau <- c(0.1, 0.5, 1)
 mu_Var <- c(0.4, 0.8, 1.2)

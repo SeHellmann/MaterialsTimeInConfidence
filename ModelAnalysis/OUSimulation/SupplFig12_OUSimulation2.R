@@ -3,7 +3,7 @@
 # This simulation should demonstrate that the OU-model with time-dependency 
 # may produce a double-increase pattern
 
-# This code produces Supplementary Figures 11.
+# This code produces Supplementary Figures 12.
 
 # Preamble and imports    
 rm(list = ls())

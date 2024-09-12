@@ -3,7 +3,7 @@
 # This simulation should demonstrate that the OU-model itself is not able to
 # produce a double-increase pattern
 
-# This code produces Supplementary Figures 10.
+# This code produces Supplementary Figures 11.
 
 # Preamble and imports    
 rm(list = ls())

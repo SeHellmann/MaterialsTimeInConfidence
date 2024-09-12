@@ -78,9 +78,10 @@ p_MRating_tau <- ggplot(meanConf_tau,
         legend.box.margin = margin(-0.3, 0, 0, 0, "cm"),
         legend.key.width=unit(1.5,"line"),
         panel.spacing.y=unit(0, "lines"))
-# # Only for manuscript generation
+p_MRating_tau
+# # # Only for manuscript generation
 # ggsave("figures/simul_2DSD_taulambda.eps",
-#        width = 17.62/2, height=8, units="cm",dpi=1200, device = cairo_ps)
+#        width = 17.62, height=15, units="cm",dpi=1200, device = cairo_ps)
 ggsave("figures/simul_2DSD_taulambda.tiff", plot=p_MRating_tau,
        width = 17.62, height=15, units="cm",dpi=600)
 
